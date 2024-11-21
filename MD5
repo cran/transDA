@@ -1,0 +1,13 @@
+cd93142a42513511ba1240fc6442b2e8 *DESCRIPTION
+83171579e92ba0389a9f49e7a1055f3a *NAMESPACE
+e8d9fe9bc94e4590fc297f23a5026645 *R/predict.tda.R
+4c319a9982a6995a162b5902f8207c6a *R/print.summary.tda.R
+f2165b283be268ce0ba797e84bea06d2 *R/print.tda.R
+16a039ed9f53ab6c49d247e121cec418 *R/summary.tda.R
+6e816a7f7886b05ed5da87a0da283bdf *R/tda.R
+4478733e15a8cd7c1ed2f8bb37e3dfb8 *demo/00Index
+b22fc5e4c3d5b88a606a21c8277351eb *demo/demotda.R
+473068192dd5d84b33174c2111c0f433 *man/predict.tda.Rd
+a6d25a375e3d2c997b518a1682192aa7 *man/summary.tda.Rd
+5c52090af0b3be50c83160f9ba5a0564 *man/tda.Rd
+3511a8dc40aff155ff16870a5732fe0b *man/transDA-package.Rd

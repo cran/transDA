@@ -1,0 +1,15 @@
+export("predict.tda", "summary.tda", "tda")
+importFrom("stats", "cov", "kmeans", "na.omit", "optim")
+importFrom(mvtnorm, dmvnorm)
+
+export(tda)
+export(print.tda)
+export(summary.tda)
+export(print.summary.tda)
+export(predict.tda)
+
+
+S3method(print, tda)
+S3method(summary, tda)
+S3method(print, summary.tda)
+S3method(predict, tda)
