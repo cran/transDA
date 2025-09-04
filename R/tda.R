@@ -4,7 +4,7 @@
 
 
 
-tda<- function(x, max_k, ID, trans = TRUE, common_lambda= FALSE, 
+tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE, 
                common_sigma = FALSE, iter = 50, 
                subgroup = NULL, tol= 0.001, lambda0 = 0.015){ 
   

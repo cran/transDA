@@ -40,7 +40,7 @@ Additional arguments that are passed to or from other methods
      split_indices <- sort(split_indices)
      traindata <- iris[split_indices,]
      testdata <- iris[-split_indices,]
-     MDA <- tda(x = traindata[,1:4], max_k = 2, ID = traindata$Species, trans = FALSE)
+     MDA <- tda(x = traindata[,1:4], ID = traindata$Species, max_k = 2, trans = FALSE)
      pred <- predict(MDA, testdata[,-5]); pred
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

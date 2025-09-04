@@ -10,7 +10,7 @@ Implements discriminant analysis methods including traditional linear (LDA), qua
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-tda(x, max_k, ID, trans = TRUE, common_lambda = FALSE,
+tda(x, ID, max_k, trans = TRUE, common_lambda = FALSE,
                  common_sigma = FALSE, iter = 50, subgroup = NULL, 
                  tol= 0.001, lambda0 = 0.015)
 }
@@ -64,24 +64,24 @@ tda(x, max_k, ID, trans = TRUE, common_lambda = FALSE,
 
 set.seed(123)
 # Example 1:
-MDA <- tda(x = iris[,1:4], max_k = 2,ID = iris$Species, trans = FALSE)
+MDA <- tda(x = iris[,1:4],ID = iris$Species, max_k = 2, trans = FALSE)
 print(MDA)
 summary(MDA)
 
 # Example 2:
-LDA <- tda(x = iris[,1:4], max_k = 1, ID = iris$Species, trans = FALSE,
+LDA <- tda(x = iris[,1:4], ID = iris$Species, max_k = 1, trans = FALSE,
         common_sigma = TRUE)
 print(LDA)
 summary(LDA)
 
 # Example 3:
-QDA <-  tda(x = iris[,1:4], subgroup = c(1, 1, 1), ID = iris$Species, 
+QDA <-  tda(x = iris[,1:4], ID = iris$Species, subgroup = c(1, 1, 1), 
         trans = FALSE, common_sigma = FALSE)
 print(QDA)
 summary(QDA)
 
 # Example 4:
-TQDA <- tda(x = iris[,1:4], subgroup = c(1, 1, 1), ID = iris$Species, 
+TQDA <- tda(x = iris[,1:4], ID = iris$Species, subgroup = c(1, 1, 1), 
         trans = TRUE, common_sigma = FALSE, common_lambda = TRUE)
 print(TQDA)
 summary(TQDA)

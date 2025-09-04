@@ -38,7 +38,7 @@ Function \code{'summary.tda'} calculates and returns a list of summary statistic
 }
 \examples{
 set.seed(123)
-model <- tda(x = iris[,1:4], max_k = 2, ID = iris$Species, trans = FALSE)
+model <- tda(x = iris[,1:4], ID = iris$Species,max_k = 2, trans = FALSE)
 summary(model)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

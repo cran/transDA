@@ -12,8 +12,8 @@ Transformation and mixture discriminant analysis.
 \tabular{ll}{
 Package: \tab transDA\cr
 Type: \tab Package\cr
-Version: \tab 1.0.0\cr
-Date: \tab 2024-6-10\cr
+Version: \tab 1.0.2\cr
+Date: \tab 2025-9-4\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab no\cr
 }
@@ -30,8 +30,7 @@ Maintainer: Jing Li \email{jli178@crimson.ua.edu}
 \references{
 Hastie, T., & Tibshirani, R. (1996). \emph{Discriminant analysis by Gaussian mixtures}. Journal of the Royal Statistical Society Series B: Statistical Methodology, 58(1), 155-176.
   
-Yana Melnykov & Jing Li. (2024)  \emph{Transformation Discriminant Analysis.} (under review)
-
+Jing Li & Yana Melnykov (2025)  \emph{Transformation Discriminant Analysis.} (under review)
 }
 % \references{Not ready yet}
 \keyword{Transformation}
@@ -46,6 +45,6 @@ Yana Melnykov & Jing Li. (2024)  \emph{Transformation Discriminant Analysis.} (u
 \examples{
 set.seed(123)
 data(iris)
-MDA <- tda(x = iris[,1:4], max_k = 2, ID = iris$Species, trans = FALSE)
+MDA <- tda(x = iris[,1:4], ID = iris$Species, max_k = 2, trans = FALSE)
 summary(MDA)
 }
