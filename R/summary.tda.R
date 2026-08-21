@@ -13,7 +13,22 @@ function(object, ...){
   
   loglik = max(object$loglik)
   
-  bic = min(na.omit(as.vector(object$BIC)))
+  criterion_name <- attr(object, "criterion_name")
+  if (is.null(criterion_name)) {
+    criterion_name <- attr(object, "criterion")
+  }
+  if (is.null(criterion_name)) {
+    available_criteria <- intersect(c("BIC", "AIC", "ICL"), names(object))
+    criterion_name <- if (length(available_criteria) > 0) available_criteria[1] else "BIC"
+  }
+  criterion_values <- object[["criterion", exact=TRUE]]
+  if (is.null(criterion_values)) {
+    criterion_values <- object[[criterion_name]]
+  }
+  if (is.null(criterion_values)) {
+    stop("The fitted object does not contain values for ", criterion_name)
+  }
+  criterion <- min(na.omit(as.vector(criterion_values)))
   classes <- levels(class)
   nclass <- length(classes)
   n <- as.vector(table(class))
@@ -40,7 +55,8 @@ function(object, ...){
   if(is.null(object$test_true_ID) ){ 
     
     obj <- list(type = type, n = n, 
-                loglik = loglik,  bic = bic,
+                loglik = loglik,
+                criterion = criterion,
                 nclass = nclass, classes = classes,
                 prior = object$prior, 
                 parameters = par, 
@@ -57,7 +73,8 @@ function(object, ...){
     names(dimnames(testset_tab)) <- c("Class", "Predicted") 
     
     obj <- list(type = type, n = n, 
-                loglik = loglik,  bic = bic,
+                loglik = loglik,
+                criterion = criterion,
                 nclass = nclass, classes = classes,
                 prior = object$prior, 
                 parameters = par, 
@@ -71,6 +88,7 @@ function(object, ...){
     
   }
   
+  attr(obj, "criterion_name") <- criterion_name
   
   
   

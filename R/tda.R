@@ -6,8 +6,12 @@
 
 tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE, 
                common_sigma = FALSE, iter = 50, 
-               subgroup = NULL, tol= 0.001, lambda0 = 0.015){ 
+               subgroup = NULL, tol= 0.001, lambda0 = 0.015, 
+               iter.max = 1, nstart = 10, criterion = "BIC"
+               ){ 
   
+ ##  criterion <- match.arg(criterion, c("AIC", "BIC", "ICL"))
+  criterion <- match.arg(criterion, c("AIC", "BIC"))
   
   # E_step0
   
@@ -18,7 +22,7 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
     kmean<-list()
     for (g in 1:length(x)) {
       
-      kmean[[g]]<-kmeans(x[[g]],k[g])
+      kmean[[g]]<-kmeans(x[[g]],k[g], iter.max = iter.max, nstart = nstart)
       
     }
     
@@ -655,9 +659,9 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
   
   
   
-  ### calculate BIC   #####
+  ### calculate information criterion   #####
   
-  BIC_est<-function(loglik,mu,x){
+  information_criterion_est<-function(loglik,mu,x,criterion,Z){
     
     
     N_k=nrow(do.call(rbind,mu))
@@ -688,9 +692,16 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
       M=N_k-1+N_k*N_p +N_k*N_p*(N_p+1)/2
     }
     
-    BIC_est=-2*loglik+log(nrow(do.call(rbind, x)))*M
+    BIC <- -2 * loglik + log(nrow(do.call(rbind, x))) * M
+    Z_safe <- pmax(unlist(Z, use.names=FALSE), 1e-12)
+    entropy <- -sum(Z_safe * log(Z_safe))
     
-    return(BIC_est)
+    switch(
+      criterion,
+      AIC = -2 * loglik + 2 * M,
+      BIC = BIC,
+      ICL = BIC + 2 * entropy
+    )
   }
   
   
@@ -985,9 +996,14 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
       
     }
     
-    BIC<-BIC_est(loglik = loglik1,mu=mu,x=subsets)
+    criterion_value<-information_criterion_est(loglik = loglik1,mu=mu,
+                                                x=subsets,
+                                                criterion=criterion,
+                                                Z=gamma_list)
     
-    est[[j]]<-list(params,gamma_list,loglik,BIC,lambda00)
+    est[[j]]<-list(params=params,gamma=gamma_list,loglik=loglik,
+                   criterion=criterion_value,lambda=lambda00,
+                   final_loglik=loglik1)
     
   }
   
@@ -996,10 +1012,11 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
   }
   
   
+  valid_model <- rep(TRUE, length(est))
+  
   for ( i in 1: length(est)){
     if (inherits(est[[i]][[5]], "try-error")  ) {
-  
-      est[[i]][[4]] = Inf
+      valid_model[i] <- FALSE
     }
     
   }
@@ -1008,71 +1025,71 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
  
     loglik_tt<- na.omit(est[[i]][[3]]) 
  
-    if (length(loglik_tt) >=2 && length(loglik_tt) < iter && abs(loglik_tt[length(loglik_tt)] - loglik_tt[length(loglik_tt) - 1]) > tol) {
-      est[[i]][[4]] <- Inf
+    if (!is.finite(est[[i]]$final_loglik)) {
+      valid_model[i] <- FALSE
+    } else if (length(loglik_tt) >=2 && length(loglik_tt) < iter && abs(loglik_tt[length(loglik_tt)] - loglik_tt[length(loglik_tt) - 1]) > tol) {
+      valid_model[i] <- FALSE
     }else if(length(loglik_tt)==1){
-      est[[i]][[4]] <- Inf
+      valid_model[i] <- FALSE
     }
     
   }
   
-  
-  
-  
-
-  est_bic<-rep(NA,length = length(est))
+  criterion_values<-rep(NA_real_, length = length(est))
   
   for ( i in 1:length(est)){
-    
-    est_bic[i]<-est[[i]][[4]]
+    if (valid_model[i]) {
+      criterion_values[i]<-est[[i]][[4]]
+    }
   }
   
   if(!is.null(subgroup)){
     
-    est_bic <- est_bic
+    criterion_values <- criterion_values
     
   }else if (length(subsets)==2 && is.null(subgroup) ) {
-    est_bic<-matrix(est_bic,max_k,max_k, byrow = F)
+    criterion_values<-matrix(criterion_values,max_k,max_k, byrow = F)
     
-    colnames(est_bic) <- paste0("G2_k =", 1:max_k)
-    rownames(est_bic) <- paste0("G1_k =", 1:max_k)
+    colnames(criterion_values) <- paste0("G2_k =", 1:max_k)
+    rownames(criterion_values) <- paste0("G1_k =", 1:max_k)
     
   } else if ( length(subsets) > 2 && is.null(subgroup))
   {
-    est_bic<-array(est_bic, dim=c(rep(max_k,length(subsets))) ) # names for array
+    criterion_values<-array(criterion_values, dim=c(rep(max_k,length(subsets))) ) # names for array
     
-    dim_names <- function(est_bic) {
-      lapply(seq_along(dim(est_bic)), function(dim_index) {
-        labels <- seq_len(dim(est_bic)[dim_index])
+    dim_names <- function(criterion_values) {
+      lapply(seq_along(dim(criterion_values)), function(dim_index) {
+        labels <- seq_len(dim(criterion_values)[dim_index])
         paste0("G", dim_index, "_k=", labels)
       })
     }
     
     
-    dim_names <- dim_names(est_bic)
+    dim_names <- dim_names(criterion_values)
     
     
-    dimnames(est_bic) <- dim_names
+    dimnames(criterion_values) <- dim_names
     
   }
   
   
   
-  est_bic[is.infinite(est_bic)] <- NA
+  criterion_values[is.infinite(criterion_values)] <- NA
   
+  selectable <- which(valid_model & vapply(
+    est, function(model) is.finite(model$criterion), logical(1)
+  ))
   
-  
-  min_value <- Inf
-  min_BIC_est <- NULL
-  
-  
-  for (i in seq_along(est)) {
-    current_BIC_value <- est[[i]][[4]]
-    if (current_BIC_value < min_value) {
-      min_value <- current_BIC_value
-      min_BIC_est<- est[[i]]
-    }
+  if (length(selectable) > 0) {
+    criterion_for_selection <- vapply(
+      est[selectable], function(model) model$criterion, numeric(1)
+    )
+    best_index <- selectable[which.min(criterion_for_selection)]
+  } else {
+    stop("No valid model is available for selection using ", criterion)
   }
+  
+  best_est <- est[[best_index]]
   
   
   ## prediction function
@@ -1092,22 +1109,22 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
   
   pred_data <- traindata[,-ID_col_number]
   
-  p_list <- min_BIC_est[[1]]$p
+  p_list <- best_est[[1]]$p
   
   
   if (is.null(p_list) &&inherits(lambda00, "try-error")) {
     stop("Can't estimate transformation parameter --lambda, try to change the innial lambda or increase the sample size")
   }else{ names(p_list)<-c(paste0("G", 1:length(subsets)))}
   
-  mu_list <- min_BIC_est[[1]]$mu
+  mu_list <- best_est[[1]]$mu
   
   names(mu_list) <- c(paste0("G", 1:length(subsets)))
   
-  sigma_list<-min_BIC_est[[1]]$sigma
+  sigma_list<-best_est[[1]]$sigma
   
   names(sigma_list) <- c(paste0("G", 1:length(subsets)))
   
-  lambda00<-min_BIC_est[[5]]
+  lambda00<-best_est[[5]]
   
   
   pred_matrix <- pred(x=pred_data,p = p_list,
@@ -1228,28 +1245,28 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
   
   names(lambda) <- c(paste0("G", 1:length(subsets)))
   
-  loglik0 <- min_BIC_est[[3]]
+  loglik0 <- best_est[[3]]
   
   loglik  <- loglik0[!is.na(loglik0)]
   
 
   if (trans == FALSE)  {
-    fit<-list(est_bic,p_list,mu_list,sigma_list,
+    fit<-list(criterion_values,p_list,mu_list,sigma_list,
               loglik,original_pred_ID,original_ID,prior,misclassification_rate,ARI,z)
     
     
-    names(fit)<-c("BIC","sub_prior","mu","sigma",
+    names(fit)<-c("criterion","sub_prior","mu","sigma",
                   "loglik","predict_ID", "true_ID", "prior",
                   "misclassification_rate","ARI","Z")
     
     
   } else if (trans == TRUE)    {
     
-    fit<-list(est_bic,p_list,mu_list,sigma_list,lambda,
+    fit<-list(criterion_values,p_list,mu_list,sigma_list,lambda,
               loglik,original_pred_ID,original_ID,prior,misclassification_rate,ARI,z)
     
     
-    names(fit)<-c("BIC","sub_prior","mu","sigma", "lambda",
+    names(fit)<-c("criterion","sub_prior","mu","sigma", "lambda",
                   "loglik","predict_ID","true_ID","prior",
                   "misclassification_rate","ARI","Z")
     
@@ -1257,9 +1274,10 @@ tda<- function(x, ID, max_k, trans = TRUE, common_lambda= FALSE,
   }   
   
   
+  attr(fit, "criterion_name") <- criterion
   class(fit) <- "tda"
   
-  return(fit) # get the estimated parameter only with min BIC
+  return(fit) # get the estimated parameters for the model selected by criterion
   
   
   
@@ -1279,9 +1297,22 @@ print.tda <- function(x,...) {
   cat("Discriminant Analysis", "\n")
   cat(" ", "\n")
   
-  if(length(c(x$BIC))==1 ) {
+  criterion_name <- attr(x, "criterion_name")
+  if (is.null(criterion_name)) {
+    criterion_name <- attr(x, "criterion")
+  }
+  if (is.null(criterion_name)) {
+    available_criteria <- intersect(c("BIC", "AIC", "ICL"), names(x))
+    criterion_name <- if (length(available_criteria) > 0) available_criteria[1] else "BIC"
+  }
+  criterion_values <- x$criterion
+  if (is.null(criterion_values)) {
+    criterion_values <- x[[criterion_name]]
+  }
+  
+  if(length(c(criterion_values))==1 ) {
     
-    cat("BIC:",x$BIC,"\n")
+    cat(paste0(criterion_name, ":"),criterion_values,"\n")
     cat(" ", "\n")
     cat("prior:",  "\n")
     
@@ -1302,10 +1333,11 @@ print.tda <- function(x,...) {
     
   } else {
     
-    cat("BIC:" , "\n")
-    print(x$BIC)
+    cat(paste0(criterion_name, ":") , "\n")
+    print(criterion_values)
     cat(" ", "\n")
-    cat("minimum BIC:", min(na.omit(as.vector(x$BIC))), "\n")
+    cat(paste0("minimum ", criterion_name, ":"),
+        min(na.omit(as.vector(criterion_values))), "\n")
     
     cat(" ", "\n")
     
@@ -1334,7 +1366,3 @@ print.tda <- function(x,...) {
   
   invisible()
 }
-
-
-
-

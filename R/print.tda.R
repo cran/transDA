@@ -6,9 +6,25 @@ function(x,...) {
   # cat(" ", "\n")
   cat("-----------------------------------\n")
   
-  if(length(c(x$BIC))==1 ) {
+  criterion_name <- attr(x, "criterion_name")
+  if (is.null(criterion_name)) {
+    criterion_name <- attr(x, "criterion")
+  }
+  if (is.null(criterion_name)) {
+    available_criteria <- intersect(c("BIC", "AIC", "ICL"), names(x))
+    criterion_name <- if (length(available_criteria) > 0) available_criteria[1] else "BIC"
+  }
+  criterion_values <- x[["criterion", exact=TRUE]]
+  if (is.null(criterion_values)) {
+    criterion_values <- x[[criterion_name]]
+  }
+  if (is.null(criterion_values)) {
+    stop("The fitted object does not contain criterion values")
+  }
+  
+  if(length(c(criterion_values))==1 ) {
     
-    cat("BIC:",x$BIC,"\n")
+    cat(paste0(criterion_name, ":"),criterion_values,"\n")
     cat(" ", "\n")
     cat("prior:",  "\n")
     
@@ -29,10 +45,11 @@ function(x,...) {
     
   } else {
     
-    cat("BIC:" , "\n")
-    print(x$BIC)
+    cat(paste0(criterion_name, ":") , "\n")
+    print(criterion_values)
     cat(" ", "\n")
-    cat("minimum BIC:", min(na.omit(as.vector(x$BIC))), "\n")
+    cat(paste0("minimum ", criterion_name, ":"),
+        min(na.omit(as.vector(criterion_values))), "\n")
     
     cat(" ", "\n")
     

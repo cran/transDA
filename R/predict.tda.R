@@ -10,6 +10,15 @@ function(object, newdata, ...)
     stop("newdata must be provided")
   }
   
+  criterion_name <- attr(object, "criterion_name")
+  if (is.null(criterion_name)) {
+    criterion_name <- attr(object, "criterion")
+  }
+  if (is.null(criterion_name)) {
+    available_criteria <- intersect(c("BIC", "AIC", "ICL"), names(object))
+    criterion_name <- if (length(available_criteria) > 0) available_criteria[1] else "BIC"
+  }
+  
   
   
   pred<-function(x,p,mu,sigma,prior,lambda){
@@ -120,6 +129,7 @@ function(object, newdata, ...)
   colnames(Z ) <- classNames
   
   out <- list(classification = class, Z = Z )
+  attr(out, "criterion_name") <- criterion_name
   return(out) 
   
   

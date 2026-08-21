@@ -12,7 +12,8 @@ Implements discriminant analysis methods including traditional linear (LDA), qua
 \usage{
 tda(x, ID, max_k, trans = TRUE, common_lambda = FALSE,
                  common_sigma = FALSE, iter = 50, subgroup = NULL, 
-                 tol= 0.001, lambda0 = 0.015)
+                 tol= 0.001, lambda0 = 0.015, iter.max = 1,
+                 nstart = 10, criterion = "BIC")
 }
 
 
@@ -30,21 +31,26 @@ tda(x, ID, max_k, trans = TRUE, common_lambda = FALSE,
   \item{subgroup}{A vector containing the number of mixture components per each class to be fitted}
   \item{tol}{Tolerance level for a stopping critetion based on the relative difference in two consecutive log-likelihood values}
   \item{lambda0}{Starting value for transformation parameters}
-}
+  %\item{iter.max}{A maximum number of iterations allowed in the k-means algorithm used to initialize the EM algorithm}
+  %\item{nstart}{A number of random initial configurations used by the k-means algorithm to initialize the EM algorithm}
+  \item{iter.max}{The maximum number of iterations for the K-means algorithm used to initialize EM; default value is 1}
+  \item{nstart}{The number of random starts for the K-means algorithm used to initialize EM; default value is 10}
+  \item{criterion}{BIC or AIC; BIC is chosen by default.}
+  }
 %% \details{%%  ~~ If necessary, more details than the description above ~~}
 \value{
- \item{BIC}{Values of the Bayesian Information Criterion calculated for each evaluated model}
-\item{subprior }{Estimated component priors for each class}
-\item{mu }{Estimated component means for each class}
-\item{sigma }{Estimated component covariance matrices for each group}
-\item{lambda }{Estimated transformation parameters}
+ \item{criterion }{Values of the Bayesian or Akaike’s Information Criterion calculated for each evaluated model (BIC is default).}
+\item{subprior }{Estimated component priors for each class.}
+\item{mu }{Estimated component means for each class.}
+\item{sigma }{Estimated component covariance matrices for each group.}
+\item{lambda }{Estimated transformation parameters.}
 %\item{True_ID }{REMOVE THIS AS REDUNDANT} 
-\item{loglik }{The log-likelihood value for the model with the lowest BIC}
-\item{pred_ID }{Estimated classification of observations in the training data set}
-\item{prior }{Estimated class priors}
-\item{misclassification_rate }{Misclassification rate for the training data set}
-\item{ARI}{Adjusted Rand index value}
-\item{Z}{Matrix of posterior probabilities for the training data set}
+\item{loglik }{The log-likelihood value for the model with the lowest BIC.}
+\item{pred_ID }{Estimated classification of observations in the training data set.}
+\item{prior }{Estimated class priors.}
+\item{misclassification_rate }{Misclassification rate for the training data set.}
+\item{ARI}{Adjusted Rand index value.}
+\item{Z}{Matrix of posterior probabilities for the training data set.}
 %\item{test_data_pred_ID}{predict ID on testing data.}
 %\item{test_data_true_ID}{true ID of test dataset}
 %\item{test_data_misclassification_rate}{misclassification rate of testing dataset}

@@ -15,10 +15,42 @@ function(x,...){
   cat("\n")
   cat("Model summary:")
   cat("\n")
+  criterion_name <- attr(x, "criterion_name")
+  if (is.null(criterion_name)) {
+    criterion_name <- attr(x, "criterion")
+  }
+  if (is.null(criterion_name)) {
+    stored_criterion <- x[["criterion", exact=TRUE]]
+    criterion_name <- if (is.character(stored_criterion)) stored_criterion else "BIC"
+  }
+  criterion_value <- x[["criterion", exact=TRUE]]
+  
+  # Support summary objects created by earlier versions of these methods.
+  if (is.character(criterion_value)) {
+    criterion_value <- x[["criterion_value", exact=TRUE]]
+  }
+  if (is.null(criterion_value)) {
+    criterion_value <- x[["criterion_value", exact=TRUE]]
+  }
+  if (is.null(criterion_value)) {
+    old_criterion <- attr(x, "criterion_name")
+    if (is.null(old_criterion)) {
+      old_criterion <- attr(x, "criterion")
+    }
+    if (is.null(old_criterion)) {
+      old_criterion <- "BIC"
+    }
+    criterion_value <- x[[tolower(old_criterion)]]
+  }
+  if (is.null(criterion_value)) {
+    stop("The summary object does not contain a criterion value")
+  }
+  
   tab1 <- data.frame("log-likelihood" = x$loglik,
                      "n" = sum(x$n),  
-                     "BIC" = x$bic, 
+                     "criterion" = criterion_value,
                      row.names = "", check.names = FALSE)
+  names(tab1)[3] <- criterion_name
   print(tab1)
   
   
